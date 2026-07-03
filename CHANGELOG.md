@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v3.1.0 - [July 3, 2026](https://github.com/lando/code-sign-action/releases/tag/v3.1.0)
+
 * Added support for using [Azure Artifact Signing](https://learn.microsoft.com/en-us/azure/trusted-signing/) [#30](https://github.com/lando/code-sign-action/pull/30)
 
 ## v3.0.0 - [November 19, 2024](https://github.com/lando/code-sign-action/releases/tag/v3.0.0)

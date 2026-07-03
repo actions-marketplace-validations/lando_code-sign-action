@@ -1,0 +1,46 @@
+name: PR Notarization Tests
+
+on:
+  pull_request:
+
+jobs:
+  notarize-tests:
+    runs-on: macos-15
+    env:
+      term: xterm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install dependencies
+        shell: bash
+        run: npm ci --prefer-offline
+      - name: Package node binary
+        shell: bash
+        run: npm run build
+      - name: Codesign
+        id: code-sign-action
+        uses: ./
+        with:
+          file: dist/@lando/code-sign-action
+          certificate-data: ${{ secrets.APPLE_CERT_DATA }}
+          certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+          apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
+          apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+          apple-team-id: 466VYKC9T5
+          apple-product-id: dev.lando.code-sign-action
+          options: --options runtime --entitlements entitlements.xml
+      - name: Test output
+        shell: bash
+        run: |
+          echo "${{ steps.code-sign-action.outputs.file }}"
+          stat "${{ steps.code-sign-action.outputs.file }}"
+      - name: Execute file
+        shell: bash
+        run: chmod +x "${{ steps.code-sign-action.outputs.file }}" && "${{ steps.code-sign-action.outputs.file }}"

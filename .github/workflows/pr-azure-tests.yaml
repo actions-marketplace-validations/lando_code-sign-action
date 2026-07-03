@@ -1,0 +1,49 @@
+name: PR Azure Tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  azure-artifact-signing-tests:
+    runs-on: windows-2025
+    env:
+      term: xterm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install dependencies
+        shell: bash
+        run: npm ci --prefer-offline
+      - name: Package node binary
+        shell: bash
+        run: npm run build
+      - name: Codesign
+        id: code-sign-action
+        uses: ./
+        with:
+          file: ${{ github.workspace }}\dist\@lando\code-sign-action.exe
+          certificate-id: lando
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          azure-signing-account-name: lando
+          azure-signing-endpoint: https://eus.codesigning.azure.net/
+      - name: Test output
+        shell: bash
+        run: |
+          echo "${{ steps.code-sign-action.outputs.file }}"
+          stat "${{ steps.code-sign-action.outputs.file }}"
+      - name: Execute file
+        shell: bash
+        run: chmod +x "${{ steps.code-sign-action.outputs.file }}" && "${{ steps.code-sign-action.outputs.file }}"
